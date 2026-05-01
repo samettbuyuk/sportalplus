@@ -4,7 +4,7 @@ import NewsCard from '../components/NewsCard';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, Zap, Newspaper, ArrowRight, Dribbble, Target } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { TwitterTimelineEmbed } from 'react-twitter-embed';
+import TwitterTimeline from '../components/TwitterTimeline';
 
 export default function Home() {
   const [featuredNews, setFeaturedNews] = useState<News | null>(null);
@@ -181,29 +181,9 @@ export default function Home() {
             </div>
             
             <div className="space-y-0 rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 min-h-[400px] flex flex-col">
-              <TwitterTimelineEmbed
-                sourceType="profile"
+              <TwitterTimeline
                 screenName="sportalplus"
-                options={{ height: 600, theme: 'light', width: '100%' }}
-                placeholder={
-                  <div className="space-y-8 p-6 bg-white flex-grow">
-                    {[1, 2, 3].map(i => (
-                      <div key={i} className="animate-pulse space-y-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-slate-100 rounded-full" />
-                          <div className="space-y-2 flex-grow">
-                            <div className="h-3 bg-slate-100 rounded w-1/3"></div>
-                            <div className="h-2 bg-slate-50 rounded w-1/4"></div>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="h-4 bg-slate-100 rounded w-full"></div>
-                          <div className="h-4 bg-slate-100 rounded w-5/6"></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                }
+                height={600}
               />
               <div className="p-4 bg-slate-100/50 text-center border-t border-slate-200">
                 <a 
