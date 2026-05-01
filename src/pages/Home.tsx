@@ -180,23 +180,41 @@ export default function Home() {
               </a>
             </div>
             
-            <div className="space-y-0 rounded-2xl overflow-hidden border border-slate-100">
+            <div className="space-y-0 rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 min-h-[400px] flex flex-col">
               <TwitterTimelineEmbed
                 sourceType="profile"
                 screenName="sportalplus"
-                options={{ height: 600, theme: 'light' }}
+                options={{ height: 600, theme: 'light', width: '100%' }}
                 placeholder={
-                  <div className="space-y-12 p-6">
+                  <div className="space-y-8 p-6 bg-white flex-grow">
                     {[1, 2, 3].map(i => (
                       <div key={i} className="animate-pulse space-y-4">
-                        <div className="h-4 bg-slate-100 rounded w-3/4"></div>
-                        <div className="h-4 bg-slate-100 rounded w-1/2"></div>
-                        <div className="h-3 bg-slate-50 rounded w-1/4"></div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-slate-100 rounded-full" />
+                          <div className="space-y-2 flex-grow">
+                            <div className="h-3 bg-slate-100 rounded w-1/3"></div>
+                            <div className="h-2 bg-slate-50 rounded w-1/4"></div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="h-4 bg-slate-100 rounded w-full"></div>
+                          <div className="h-4 bg-slate-100 rounded w-5/6"></div>
+                        </div>
                       </div>
                     ))}
                   </div>
                 }
               />
+              <div className="p-4 bg-slate-100/50 text-center border-t border-slate-200">
+                <a 
+                  href="https://x.com/sportalplus" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="text-[9px] font-black text-slate-400 hover:text-brand uppercase tracking-widest transition-colors"
+                >
+                  X.com'da Görüntüle
+                </a>
+              </div>
             </div>
 
             <div className="mt-12 pt-10 border-t border-slate-50 text-center">
