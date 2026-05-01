@@ -4,7 +4,7 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { newsService, News } from '../services/newsService';
 import { logout } from '../lib/firebase';
-import { Save, ArrowLeft, Image as ImageIcon, Search, CheckCircle2, AlertCircle, Link2, Copy, FileCode, Dribbble, Trophy, Target, LogOut } from 'lucide-react';
+import { Save, Trash2, ArrowLeft, Image as ImageIcon, Search, CheckCircle2, AlertCircle, Link2, Copy, FileCode, Dribbble, Trophy, Target, LogOut } from 'lucide-react';
 
 const quillFormats = [
   'header',
@@ -76,6 +76,8 @@ export default function AdminEditor() {
   const [seoAnalysis, setSeoAnalysis] = useState<SEOScore>({ score: 0, checks: [] });
   const [contentSize, setContentSize] = useState(0);
   const [tagInput, setTagInput] = useState('');
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -181,6 +183,29 @@ export default function AdminEditor() {
       navigate('/admin/news');
     } catch (error) {
       console.error(error);
+      alert('Haber kaydedilirken bir hata oluştu.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      await newsService.deleteNews(id);
+      setDeleteConfirmOpen(false);
+      alert('Haber başarıyla silindi.');
+      navigate('/admin/news');
+    } catch (error) {
+      console.error('Silme hatası (Editör):', error);
+      const errorMsg = error instanceof Error ? error.message : 'Bilinmeyen hata';
+      try {
+        const jsonErr = JSON.parse(errorMsg);
+        alert(`Silme Hatası (Firestore):\n${jsonErr.error}\nRol: ${jsonErr.operationType}\nYol: ${jsonErr.path}`);
+      } catch {
+        alert('Haber silinirken bir hata oluştu: ' + errorMsg);
+      }
     } finally {
       setLoading(false);
     }
@@ -230,6 +255,16 @@ export default function AdminEditor() {
             </button>
           </div>
           <div className="flex items-center gap-4 w-full md:w-auto">
+            {id && (
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmOpen(true)}
+                disabled={loading}
+                className="flex-grow md:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-red-50 text-red-600 border border-red-100 rounded-xl font-bold hover:bg-red-100 transition-all text-sm disabled:opacity-50"
+              >
+                <Trash2 size={18} /> SİL
+              </button>
+            )}
             <button
               onClick={handleSubmit}
               disabled={loading || contentSize > 1048576}
@@ -526,6 +561,39 @@ export default function AdminEditor() {
           </div>
         </form>
       </div>
+
+      {/* Modern Silme Onay Modal */}
+      {deleteConfirmOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl border border-slate-100"
+          >
+            <div className="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Trash2 size={32} />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Haberi Silmek İstiyor Musunuz?</h2>
+            <p className="text-slate-500 text-center text-sm mb-8 leading-relaxed">
+              Bu işlem geri alınamaz. Haberi sistemden kalıcı olarak temizlemek istediğinize emin misiniz?
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => setDeleteConfirmOpen(false)}
+                className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm"
+              >
+                Vazgeç
+              </button>
+              <button 
+                onClick={handleDelete}
+                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all text-sm shadow-lg shadow-red-200"
+              >
+                Evet, Sil
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

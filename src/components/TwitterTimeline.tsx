@@ -7,33 +7,37 @@ interface TwitterTimelineProps {
 
 export default function TwitterTimeline({ screenName, height = 600 }: TwitterTimelineProps) {
   useEffect(() => {
-    // Load Twitter script if it doesn't exist
     const scriptId = 'twitter-wjs';
-    if (!document.getElementById(scriptId)) {
-      const script = document.createElement('script');
-      script.id = scriptId;
-      script.src = 'https://platform.twitter.com/widgets.js';
-      script.async = true;
-      document.body.appendChild(script);
-    } else {
-      // If it exists, we might need to trigger a render
+    const initTwitter = () => {
       // @ts-ignore
       if (window.twttr && window.twttr.widgets) {
         // @ts-ignore
         window.twttr.widgets.load();
       }
+    };
+
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://platform.twitter.com/widgets.js';
+      script.async = true;
+      script.onload = initTwitter;
+      document.body.appendChild(script);
+    } else {
+      initTwitter();
     }
-  }, []);
+  }, [screenName]);
 
   return (
-    <div className="w-full overflow-hidden flex flex-col" style={{ height: height }}>
+    <div className="w-full overflow-hidden flex flex-col bg-white" style={{ height }}>
       <a
         className="twitter-timeline"
         data-height={height}
         data-theme="light"
+        data-chrome="noheader nofooter transparent"
         href={`https://twitter.com/${screenName}?ref_src=twsrc%5Etfw`}
       >
-        Tweets by {screenName}
+        Sportal+ Twitter Akışı Yükleniyor...
       </a>
     </div>
   );

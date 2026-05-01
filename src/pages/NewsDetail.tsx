@@ -88,7 +88,7 @@ export default function NewsDetail() {
            
            <div className="flex items-center justify-center gap-2 md:gap-3">
              <span className={`px-2.5 md:px-3 py-0.5 md:py-1 text-[9px] md:text-[10px] font-bold uppercase tracking-widest rounded ${catStyle}`}>
-               {news.category}
+               {news.category === 'football' ? 'Futbol' : news.category === 'basketball' ? 'Basketbol' : news.category === 'volleyball' ? 'Voleybol' : news.category}
              </span>
              {news.isAmateur && (
                <span className="px-2.5 md:px-3 py-0.5 md:py-1 bg-amber-100 text-amber-700 text-[9px] md:text-[10px] font-bold uppercase tracking-widest rounded">

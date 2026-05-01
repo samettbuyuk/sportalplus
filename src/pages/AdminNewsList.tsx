@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { newsService, News } from '../services/newsService';
 import { logout } from '../lib/firebase';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { Edit, Trash2, ExternalLink, Plus, Search, Calendar, Eye, LogOut } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -25,17 +26,37 @@ export default function AdminNewsList() {
     loadNews();
   }, []);
 
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
   const loadNews = async () => {
     setLoading(true);
-    const data = await newsService.getAllNews();
-    setNews(data || []);
-    setLoading(false);
+    try {
+      const data = await newsService.getAllNews();
+      setNews(data || []);
+    } catch (error) {
+      console.error('Error loading news:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Bu haberi kalıcı olarak silmek istediğinize emin misiniz?')) {
+    try {
+      setLoading(true);
       await newsService.deleteNews(id);
-      loadNews();
+      setDeleteConfirmId(null);
+      await loadNews();
+    } catch (error) {
+      console.error('Silme hatası:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Bilinmeyen hata';
+      try {
+        const jsonErr = JSON.parse(errorMsg);
+        alert(`Silme Hatası (Firestore):\n${jsonErr.error}\nRol: ${jsonErr.operationType}\nYol: ${jsonErr.path}`);
+      } catch {
+        alert('Haber silinirken bir hata oluştu: ' + errorMsg);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -128,7 +149,7 @@ export default function AdminNewsList() {
                     </td>
                     <td className="px-8 py-5">
                       <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase ${n.category === 'football' ? 'bg-blue-100 text-blue-700' : n.category === 'basketball' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                        {n.category}
+                        {n.category === 'football' ? 'Futbol' : n.category === 'basketball' ? 'Basketbol' : n.category === 'volleyball' ? 'Voleybol' : n.category}
                       </span>
                     </td>
                     <td className="px-8 py-5">
@@ -144,13 +165,14 @@ export default function AdminNewsList() {
                        </div>
                     </td>
                     <td className="px-8 py-5 text-right">
-                       <div className="flex items-center justify-end gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
+                       <div className="flex items-center justify-end gap-3 transition-opacity">
                           <Link to={`/admin/news/edit/${n.id}`} className="p-2.5 bg-slate-50 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-lg transition-all border border-slate-100">
                             <Edit size={16} />
                           </Link>
                           <button 
-                            onClick={() => handleDelete(n.id!)}
-                            className="p-2.5 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-lg transition-all border border-slate-100"
+                            type="button"
+                            onClick={() => setDeleteConfirmId(n.id!)}
+                            className="p-2.5 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded-lg transition-all border border-slate-100 cursor-pointer"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -165,7 +187,40 @@ export default function AdminNewsList() {
             </tbody>
           </table>
         </div>
-      </div>
+       </div>
+
+      {/* Modern Silme Onay Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl border border-slate-100"
+          >
+            <div className="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Trash2 size={32} />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Haberi Silmek İstiyor Musunuz?</h2>
+            <p className="text-slate-500 text-center text-sm mb-8 leading-relaxed">
+              Bu işlem geri alınamaz. Haberi sistemden kalıcı olarak temizlemek istediğinize emin misiniz?
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => setDeleteConfirmId(null)}
+                className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm"
+              >
+                Vazgeç
+              </button>
+              <button 
+                onClick={() => handleDelete(deleteConfirmId)}
+                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all text-sm shadow-lg shadow-red-200"
+              >
+                Evet, Sil
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

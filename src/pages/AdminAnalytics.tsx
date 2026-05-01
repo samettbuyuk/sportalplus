@@ -346,7 +346,7 @@ export default function AdminAnalytics() {
                     </td>
                     <td className="px-10 py-6">
                       <span className={`px-3 py-1 rounded text-[10px] font-black uppercase ${n.category === 'football' ? 'bg-blue-100 text-blue-700' : n.category === 'basketball' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                        {n.category}
+                        {n.category === 'football' ? 'Futbol' : n.category === 'basketball' ? 'Basketbol' : n.category === 'volleyball' ? 'Voleybol' : n.category}
                       </span>
                     </td>
                     <td className="px-10 py-6">

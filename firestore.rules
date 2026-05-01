@@ -13,19 +13,21 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() && (
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
-        request.auth.token.email == 'samettbuyuk@gmail.com'
+        request.auth.token.email == 'samettbuyuk@gmail.com' ||
+        request.auth.token.email == 'SAMETTBUYUK@gmail.com' ||
+        request.auth.token.email.lower() == 'samettbuyuk@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
 
     function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+      return id is string && id.size() <= 256;
     }
 
     // News Articles
     match /news/{newsId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin() && isValidId(newsId);
+      allow write: if isAdmin();
     }
 
     // Clicks for Analytics

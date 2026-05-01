@@ -14,9 +14,10 @@ import {
   Pie
 } from 'recharts';
 import { newsService, News } from '../services/newsService';
-import { logout } from '../lib/firebase';
+import { logout, db, auth } from '../lib/firebase';
+import { setDoc, doc as firestoreDoc } from 'firebase/firestore';
 import { motion } from 'motion/react';
-import { Eye, Plus, MessageSquare, TrendingUp, Users, BarChart3, LogOut } from 'lucide-react';
+import { Eye, Plus, MessageSquare, TrendingUp, Users, BarChart3, LogOut, Trash2, Edit } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format, subDays, isSameDay } from 'date-fns';
 import { tr } from 'date-fns/locale';
@@ -57,38 +58,89 @@ export default function AdminDashboard() {
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // Auto-register Samet as admin if not already there
+      if (auth.currentUser && auth.currentUser.email === 'samettbuyuk@gmail.com') {
+        try {
+          await setDoc(firestoreDoc(db, 'admins', auth.currentUser.uid), {
+            email: auth.currentUser.email,
+            role: 'owner',
+            createdAt: new Date()
+          }, { merge: true });
+        } catch (e) {
+          console.warn('Admin auto-registration failed:', e);
+        }
+      }
+
       const allNews = await newsService.getAllNews();
       const rawClicks = await newsService.getAnalyticsSummary();
       
-      if (allNews && rawClicks) {
+      if (allNews) {
         setNews(allNews);
         
         // 1. Prepare Category Distribution
         const cats: any = { football: 0, basketball: 0, volleyball: 0 };
         allNews.forEach(n => cats[n.category]++);
-        setCategoryData(Object.entries(cats).map(([name, value]) => ({ name, value })));
+        const catMap: { [key: string]: string } = {
+          football: 'Futbol',
+          basketball: 'Basketbol',
+          volleyball: 'Voleybol'
+        };
+        setCategoryData(Object.entries(cats).map(([name, value]) => ({ 
+          name: catMap[name] || name, 
+          value 
+        })));
 
-        // 2. Prepare Click Timeline (Last 7 days)
-        const timeline = [];
-        for (let i = 6; i >= 0; i--) {
-          const date = subDays(new Date(), i);
-          const count = (rawClicks as any[]).filter(c => 
-            c.timestamp && isSameDay(c.timestamp.toDate(), date)
-          ).length;
-          timeline.push({
-            date: format(date, 'd MMM', { locale: tr }),
-            clicks: count
-          });
+        if (rawClicks) {
+          // 2. Prepare Click Timeline (Last 7 days)
+          const timeline = [];
+          for (let i = 6; i >= 0; i--) {
+            const date = subDays(new Date(), i);
+            const count = (rawClicks as any[]).filter(c => 
+              c.timestamp && isSameDay(c.timestamp.toDate(), date)
+            ).length;
+            timeline.push({
+              date: format(date, 'd MMM', { locale: tr }),
+              clicks: count
+            });
+          }
+          setStats(timeline);
         }
-        setStats(timeline);
       }
+    } catch (error) {
+      console.error('Data fetch error:', error);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      setLoading(true);
+      await newsService.deleteNews(id);
+      setDeleteConfirmId(null);
+      await fetchData();
+    } catch (error) {
+      console.error('Silme hatası:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Bilinmeyen hata';
+      try {
+        const jsonErr = JSON.parse(errorMsg);
+        alert(`Silme Hatası (Firestore):\n${jsonErr.error}\nRol: ${jsonErr.operationType}\nYol: ${jsonErr.path}`);
+      } catch {
+        alert('Haber silinirken hata oluştu: ' + errorMsg);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const totalViews = news.reduce((acc, n) => acc + (n.clickCount || 0), 0);
   const COLORS = ['#3b82f6', '#f97316', '#10b981']; // Blue, Orange, Emerald
@@ -237,24 +289,72 @@ export default function AdminDashboard() {
                  <th className="px-8 py-4">Haber Başlığı</th>
                  <th className="px-8 py-4">Kategori</th>
                  <th className="px-8 py-4 text-right">Tıklanma</th>
+                 <th className="px-8 py-4 text-right">Aksiyonlar</th>
                </tr>
              </thead>
              <tbody className="divide-y divide-slate-100">
-               {news.sort((a,b) => b.clickCount - a.clickCount).slice(0, 5).map(n => (
-                 <tr key={n.id} className="hover:bg-slate-50/50 transition-colors">
+               {[...news].sort((a,b) => (b.clickCount || 0) - (a.clickCount || 0)).slice(0, 5).map(n => (
+                 <tr key={n.id} className="hover:bg-slate-50/50 transition-colors group">
                    <td className="px-8 py-5 font-semibold text-slate-800 text-sm">{n.title}</td>
                    <td className="px-8 py-5">
                      <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase ${n.category === 'football' ? 'bg-blue-100 text-blue-700' : n.category === 'basketball' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                       {n.category}
+                       {n.category === 'football' ? 'Futbol' : n.category === 'basketball' ? 'Basketbol' : n.category === 'volleyball' ? 'Voleybol' : n.category}
                      </span>
                    </td>
-                   <td className="px-8 py-5 text-right font-mono font-bold text-slate-900 border-l border-slate-50">{n.clickCount.toLocaleString()}</td>
+                   <td className="px-8 py-5 text-right font-mono font-bold text-slate-900 border-l border-slate-50">{(n.clickCount || 0).toLocaleString()}</td>
+                   <td className="px-8 py-5 text-right">
+                      <div className="flex items-center justify-end gap-2 transition-opacity">
+                        <Link to={`/admin/news/edit/${n.id}`} className="p-1.5 text-slate-400 hover:text-blue-600 transition-colors">
+                          <Edit size={14} />
+                        </Link>
+                          <button 
+                            type="button"
+                            onClick={() => setDeleteConfirmId(n.id!)}
+                            className="p-1.5 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                      </div>
+                   </td>
                  </tr>
                ))}
              </tbody>
            </table>
          </div>
        </motion.div>
+
+      {/* Modern Silme Onay Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl border border-slate-100"
+          >
+            <div className="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Trash2 size={32} />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900 text-center mb-2">Haberi Silmek İstiyor Musunuz?</h2>
+            <p className="text-slate-500 text-center text-sm mb-8 leading-relaxed">
+              Bu işlem geri alınamaz. Haberi sistemden kalıcı olarak temizlemek istediğinize emin misiniz?
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => setDeleteConfirmId(null)}
+                className="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm"
+              >
+                Vazgeç
+              </button>
+              <button 
+                onClick={() => handleDelete(deleteConfirmId)}
+                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all text-sm shadow-lg shadow-red-200"
+              >
+                Evet, Sil
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
