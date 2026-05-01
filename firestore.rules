@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'samettbuyuk@gmail.com'
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // News Articles
+    match /news/{newsId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() && isValidId(newsId);
+    }
+
+    // Clicks for Analytics
+    match /clicks/{clickId} {
+      allow create: if true; // Anyone can record a click
+      allow read: if isAdmin();
+      allow update, delete: if false; // Clicks are immutable logs
+    }
+
+    // Admin Whitelist
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || (isSignedIn() && request.auth.token.email == 'samettbuyuk@gmail.com');
+    }
+  }
+}

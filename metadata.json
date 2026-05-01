@@ -1,0 +1,14 @@
+{
+  "name": "Sportal+",
+  "description": "Professional sports news platform with administrative dashboard and analytics.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "news_editorial_design",
+    "admin_dashboard",
+    "click_analytics"
+  ]
+}

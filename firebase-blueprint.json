@@ -1,0 +1,55 @@
+{
+  "entities": {
+    "News": {
+      "title": "News Article",
+      "description": "A sports news article",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Headline of the article" },
+        "summary": { "type": "string", "description": "Short description" },
+        "content": { "type": "string", "description": "Full HTML or markdown content" },
+        "image": { "type": "string", "description": "URL of the cover image" },
+        "category": { "type": "string", "enum": ["football", "basketball", "volleyball"], "description": "Main sport category" },
+        "isAmateur": { "type": "boolean", "description": "Whether it belongs to amateur sports" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" },
+        "clickCount": { "type": "integer", "description": "Total views" },
+        "slug": { "type": "string", "description": "URL-friendly title" }
+      },
+      "required": ["title", "content", "category", "createdAt", "slug"]
+    },
+    "Click": {
+      "title": "News Click",
+      "description": "A single click event for analytics",
+      "type": "object",
+      "properties": {
+        "newsId": { "type": "string", "description": "ID of the news article" },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the click happened" }
+      },
+      "required": ["newsId", "timestamp"]
+    },
+    "Admin": {
+      "title": "Admin User",
+      "description": "User with admin privileges",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    }
+  },
+  "firestore": {
+    "news": {
+      "schema": "News",
+      "description": "Collection of news articles"
+    },
+    "clicks": {
+      "schema": "Click",
+      "description": "Collection of raw click events for analytics"
+    },
+    "admins": {
+      "schema": "Admin",
+      "description": "Whitelist of admin UIDs"
+    }
+  }
+}
