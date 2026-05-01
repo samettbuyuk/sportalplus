@@ -3,7 +3,8 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { newsService, News } from '../services/newsService';
-import { Save, ArrowLeft, Image as ImageIcon, Search, CheckCircle2, AlertCircle, Link2, Copy, FileCode, Dribbble, Trophy, Target } from 'lucide-react';
+import { logout } from '../lib/firebase';
+import { Save, ArrowLeft, Image as ImageIcon, Search, CheckCircle2, AlertCircle, Link2, Copy, FileCode, Dribbble, Trophy, Target, LogOut } from 'lucide-react';
 
 const quillFormats = [
   'header',
@@ -28,6 +29,15 @@ export default function AdminEditor() {
   const [assetUrl, setAssetUrl] = useState('');
   const [authors, setAuthors] = useState<string[]>([]);
   const [isAddingNewAuthor, setIsAddingNewAuthor] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/admin/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
   
   const quillModules = useMemo(() => ({
     toolbar: {
@@ -199,24 +209,41 @@ export default function AdminEditor() {
           }
         `}</style>
         <header className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4 md:gap-6 w-full md:w-auto">
-            <Link to="/admin/news" className="p-2.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl shadow-sm transition-all text-slate-400 hover:text-slate-900">
-              <ArrowLeft size={18} />
-            </Link>
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight uppercase">
-                {id ? 'İçerik Düzenleme' : 'Yeni İçerik Girişi'}
-              </h1>
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Haber ve Analiz Modülü</p>
+          <div className="flex items-center justify-between w-full md:w-auto gap-4">
+            <div className="flex items-center gap-4 md:gap-6">
+              <Link to="/admin/news" className="p-2.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl shadow-sm transition-all text-slate-400 hover:text-slate-900">
+                <ArrowLeft size={18} />
+              </Link>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight uppercase">
+                  {id ? 'İçerik Düzenleme' : 'Yeni İçerik Girişi'}
+                </h1>
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Haber ve Analiz Modülü</p>
+              </div>
             </div>
+            <button 
+              onClick={handleLogout}
+              className="md:hidden p-2 text-slate-400 hover:text-brand transition-colors"
+              title="Çıkış Yap"
+            >
+              <LogOut size={20} />
+            </button>
           </div>
-          <button
-            onClick={handleSubmit}
-            disabled={loading || contentSize > 1048576}
-            className="w-full md:w-auto btn-primary flex items-center justify-center gap-2 shadow-xl shadow-brand/10 px-8 py-3.5 disabled:opacity-50 text-sm"
-          >
-            <Save size={18} /> {loading ? 'İŞLENİYOR...' : 'YAYINLA'}
-          </button>
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <button
+              onClick={handleSubmit}
+              disabled={loading || contentSize > 1048576}
+              className="flex-grow md:flex-none btn-primary flex items-center justify-center gap-2 shadow-xl shadow-brand/10 px-8 py-3.5 disabled:opacity-50 text-sm"
+            >
+              <Save size={18} /> {loading ? 'İŞLENİYOR...' : 'YAYINLA'}
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="hidden md:flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition-all text-sm"
+            >
+              <LogOut size={16} /> Çıkış Yap
+            </button>
+          </div>
         </header>
 
         <form className="grid grid-cols-1 xl:grid-cols-3 gap-8 md:gap-10 pb-20">

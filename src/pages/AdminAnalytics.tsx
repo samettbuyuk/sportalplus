@@ -16,9 +16,10 @@ import {
   Area
 } from 'recharts';
 import { newsService, News } from '../services/newsService';
+import { logout } from '../lib/firebase';
 import { motion } from 'motion/react';
-import { BarChart3, TrendingUp, Users, Clock, MousePointer2, Calendar, Target, ArrowLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { BarChart3, TrendingUp, Users, Clock, MousePointer2, Calendar, Target, ArrowLeft, LogOut } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { format, subDays, isSameDay, startOfDay, eachDayOfInterval, isWithinInterval, subMonths } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
@@ -40,6 +41,16 @@ export default function AdminAnalytics() {
 
   const [timeRange, setTimeRange] = useState<'7d' | '14d' | '30d'>('14d');
   const [allClicks, setAllClicks] = useState<any[]>([]);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/admin/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -133,25 +144,42 @@ export default function AdminAnalytics() {
   return (
     <div className="p-4 md:p-10 space-y-8 md:space-y-12 bg-slate-50 min-h-screen">
       <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-        <div className="flex items-center gap-4 md:gap-6">
-          <Link to="/admin" className="p-2.5 md:p-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-2xl shadow-sm transition-all text-slate-400 hover:text-slate-900">
-            <ArrowLeft size={18} />
-          </Link>
-          <div>
-            <h1 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight uppercase leading-none">Veri Analitiği</h1>
-            <p className="text-slate-500 text-[10px] md:text-sm font-medium mt-1 md:mt-2">İçerik performansı ve kullanıcı davranış analizi.</p>
+        <div className="flex items-center justify-between w-full lg:w-auto gap-4">
+          <div className="flex items-center gap-4 md:gap-6">
+            <Link to="/admin" className="p-2.5 md:p-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-2xl shadow-sm transition-all text-slate-400 hover:text-slate-900">
+              <ArrowLeft size={18} />
+            </Link>
+            <div>
+              <h1 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight uppercase leading-none">Veri Analitiği</h1>
+              <p className="text-slate-500 text-[10px] md:text-sm font-medium mt-1 md:mt-2">İçerik performansı ve kullanıcı davranış analizi.</p>
+            </div>
           </div>
+          <button 
+            onClick={handleLogout}
+            className="md:hidden p-2 text-slate-400 hover:text-brand transition-colors"
+            title="Çıkış Yap"
+          >
+            <LogOut size={20} />
+          </button>
         </div>
-        <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm gap-1 w-full md:w-auto overflow-x-auto">
-           {(['7d', '14d', '30d'] as const).map((range) => (
-             <button 
-               key={range}
-               onClick={() => setTimeRange(range)}
-               className={`flex-1 md:flex-none px-4 md:px-6 py-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap ${timeRange === range ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}
-             >
-               {range === '7d' ? '7 GÜN' : range === '14d' ? '14 GÜN' : '30 GÜN'}
-             </button>
-           ))}
+        <div className="flex items-center gap-4 w-full lg:w-auto">
+          <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm gap-1 flex-grow lg:flex-none overflow-x-auto">
+             {(['7d', '14d', '30d'] as const).map((range) => (
+               <button 
+                 key={range}
+                 onClick={() => setTimeRange(range)}
+                 className={`flex-1 md:flex-none px-4 md:px-6 py-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-xl transition-all whitespace-nowrap ${timeRange === range ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}
+               >
+                 {range === '7d' ? '7 GÜN' : range === '14d' ? '14 GÜN' : '30 GÜN'}
+               </button>
+             ))}
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="hidden md:flex items-center justify-center gap-2 px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition-all text-sm"
+          >
+            <LogOut size={16} /> Çıkış Yap
+          </button>
         </div>
       </header>
 

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { newsService, News } from '../services/newsService';
+import { logout } from '../lib/firebase';
 import { Link, useNavigate } from 'react-router-dom';
-import { Edit, Trash2, ExternalLink, Plus, Search, Calendar, Eye } from 'lucide-react';
+import { Edit, Trash2, ExternalLink, Plus, Search, Calendar, Eye, LogOut } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
@@ -9,6 +10,16 @@ export default function AdminNewsList() {
   const [news, setNews] = useState<News[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/admin/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   useEffect(() => {
     loadNews();
@@ -37,16 +48,33 @@ export default function AdminNewsList() {
   return (
     <div className="p-4 md:p-10 bg-slate-50 min-h-screen space-y-6 md:space-y-10">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight uppercase">İçerik Kütüphanesi</h1>
-          <p className="text-slate-500 text-xs md:text-sm font-medium">Yayınlanan tüm haberlerin merkezi yönetim alanı.</p>
+        <div className="flex items-center justify-between w-full md:w-auto gap-4">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight uppercase">İçerik Kütüphanesi</h1>
+            <p className="text-slate-500 text-xs md:text-sm font-medium">Yayınlanan tüm haberlerin merkezi yönetim alanı.</p>
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="md:hidden p-2 text-slate-400 hover:text-brand transition-colors"
+            title="Çıkış Yap"
+          >
+            <LogOut size={20} />
+          </button>
         </div>
-        <Link 
-          to="/admin/news/new" 
-          className="w-full md:w-auto btn-primary flex items-center justify-center gap-2 shadow-lg shadow-brand/10 px-8 py-3 text-sm"
-        >
-          <Plus size={18} /> + Yeni Haber Ekle
-        </Link>
+        <div className="flex flex-wrap items-center gap-3 md:gap-4 w-full md:w-auto">
+          <Link 
+            to="/admin/news/new" 
+            className="flex-1 md:flex-none btn-primary flex items-center justify-center gap-2 shadow-lg shadow-brand/10 px-8 py-3 text-sm"
+          >
+            <Plus size={18} /> + Yeni Haber Ekle
+          </Link>
+          <button 
+            onClick={handleLogout}
+            className="hidden md:flex items-center justify-center gap-2 px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold transition-all text-sm"
+          >
+            <LogOut size={16} /> Çıkış Yap
+          </button>
+        </div>
       </header>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">

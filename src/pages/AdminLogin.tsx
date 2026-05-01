@@ -53,7 +53,7 @@ export default function AdminLogin({ user }: AdminLoginProps) {
           </div>
           <div className="space-y-2">
             <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">
-              ADMİN <span className="text-brand">PANELİ</span>
+              SPORTAL+ <span className="text-brand">PANEL</span>
             </h2>
             <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">Merkezi Yönetim Sistemi</p>
           </div>
@@ -96,7 +96,7 @@ export default function AdminLogin({ user }: AdminLoginProps) {
         <div className="pt-4 text-center">
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-loose">
             Bu alan sadece yetkili editörler içindir. <br/>
-            Erişim için <span className="text-brand">sporhaber.com</span> desteğiyle görüşün.
+            Erişim için <span className="text-brand">sportalplus.com</span> desteğiyle görüşün.
           </p>
         </div>
       </motion.div>
